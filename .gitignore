@@ -1,1 +1,4 @@
+.dropbox
+*.pyc
 fzeri_*.xml
+fzeri.ttl
