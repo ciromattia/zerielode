@@ -7,6 +7,7 @@ __copyright__ = '2014, Ciro Mattia Gonano <ciromattia@gmail.com>'
 __docformat__ = 'restructuredtext en'
 
 import sys
+import argparse
 from os.path import dirname, realpath
 from rdflib import Graph, RDF, RDFS, XSD, Namespace
 try:
@@ -16,16 +17,25 @@ except ImportError:
 from fzeri_parser_schedaF import FZeriParserSchedaF
 
 # define default source
-DEFAULT_SOURCE = dirname(realpath(__file__)) + "/fzeri_F_2014_03_11_163504_test.xml"
+DEFAULT_SOURCE = dirname(realpath(__file__)) + "/catalog/fzeri_F_2014_03_11_163504_test.xml"
 
 CRM = Namespace("http://www.cidoc-crm.org/cidoc-crm/")
 
 
-def main(argv=None):
-    if argv:
-        source_file = argv[0]
-    else:
-        source_file = DEFAULT_SOURCE
+def parse_options():
+    global options
+    parser = argparse.ArgumentParser(description='FZeri to CIDOC-CRM catalog conversion script.')
+    parser.add_argument('source_file', help='FZeri catalog file path', )
+    parser.add_argument('-o', '--output', dest="output_file", default="fzeri.ttl",
+                        help='Output file name')
+    parser.add_argument('-f', '--format', dest="format", default="turtle",
+                        help='Output format')
+    options = parser.parse_args()
+
+
+def main():
+    global options
+    parse_options()
     # create a new Graph
     rdf = Graph()
     rdf.bind("crm", "http://www.cidoc-crm.org/cidoc-crm/")
@@ -57,14 +67,14 @@ def main(argv=None):
     rdf.add((title_type, RDFS.subPropertyOf, CRM.P82_at_some_time_within))
 
     # parse xml
-    print "### SOURCING FILE " + source_file
-    xml = etree.parse(source_file)
+    print "### SOURCING FILE " + options.source_file
+    xml = etree.parse(options.source_file)
     for xmlentry in xml.findall("SCHEDA"):
         entry = FZeriParserSchedaF(xmlentry, rdf)
         entry.parse()
-    rdf.serialize(dirname(realpath(__file__)) + "/fzeri.ttl", format="turtle")
+    rdf.serialize(dirname(realpath(__file__)) + "/" + options.output_file, format=options.format)
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
     sys.exit(0)
 
