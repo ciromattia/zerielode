@@ -42,29 +42,58 @@ def main():
     rdf.bind("qudt", "http://qudt.org/vocab/unit#")
     rdf.bind("fzeriThes", "http://fe.fondazionezeri.unibo.it/thesauri/")
 
-    title_type = CRM.P102_1_title_type
-    rdf.add((title_type, RDF.type, RDF.Property))
-    rdf.add((title_type, RDFS.domain, CRM['E71_Man-Made_Thing']))
-    rdf.add((title_type, RDFS.range, CRM.E35_Title))
-    rdf.add((title_type, RDFS.subPropertyOf, CRM.P102_has_title))
+    my_prop = CRM.P102a_has_proper_title
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    # rdf.add((my_prop, RDFS.domain, CRM['E71_Man-Made_Thing']))
+    # rdf.add((my_prop, RDFS.range, CRM.E35_Title))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P102_has_title))
+    my_prop = CRM.P102b_has_parallel_title
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    # rdf.add((my_prop, RDFS.domain, CRM['E71_Man-Made_Thing']))
+    # rdf.add((my_prop, RDFS.range, CRM.E35_Title))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P102_has_title))
+    my_prop = CRM.P102c_has_attributed_title
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    # rdf.add((my_prop, RDFS.domain, CRM['E71_Man-Made_Thing']))
+    # rdf.add((my_prop, RDFS.range, CRM.E35_Title))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P102_has_title))
 
-    title_type = CRM.P3_1_cultural_context
-    rdf.add((title_type, RDF.type, RDF.Property))
-    rdf.add((title_type, RDFS.domain, CRM.E1_CRM_Entity))
-    rdf.add((title_type, RDFS.range, RDFS.Literal))
-    rdf.add((title_type, RDFS.subPropertyOf, CRM.P3_has_note))
+    my_prop = CRM.P14a_carried_out_as_publisher_by
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P14_carried_out_by))
+    my_prop = CRM.P14ai_performed_as_publisher
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P14i_performed))
+    my_prop = CRM.P14b_carried_out_as_customer_by
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P14_carried_out_by))
+    my_prop = CRM.P14bi_performed_as_customer
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P14i_performed))
+    my_prop = CRM.P14c_carried_out_as_distributor_by
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P14_carried_out_by))
+    my_prop = CRM.P14ci_performed_as_distributor
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P14i_performed))
 
-    title_type = CRM.P82a_begin_of_the_begin
-    rdf.add((title_type, RDF.type, RDF.Property))
-    rdf.add((title_type, RDFS.domain, CRM['E52_Time-Span']))
-    rdf.add((title_type, RDFS.range, XSD.dateTime))
-    rdf.add((title_type, RDFS.subPropertyOf, CRM.P82_at_some_time_within))
+    my_prop = CRM.P3a_cultural_context
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    rdf.add((my_prop, RDFS.domain, CRM.E1_CRM_Entity))
+    rdf.add((my_prop, RDFS.range, RDFS.Literal))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P3_has_note))
 
-    title_type = CRM.P82b_end_of_the_end
-    rdf.add((title_type, RDF.type, RDF.Property))
-    rdf.add((title_type, RDFS.domain, CRM['E52_Time-Span']))
-    rdf.add((title_type, RDFS.range, XSD.dateTime))
-    rdf.add((title_type, RDFS.subPropertyOf, CRM.P82_at_some_time_within))
+    my_prop = CRM.P82a_begin_of_the_begin
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    rdf.add((my_prop, RDFS.domain, CRM['E52_Time-Span']))
+    rdf.add((my_prop, RDFS.range, XSD.dateTime))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P82_at_some_time_within))
+
+    my_prop = CRM.P82b_end_of_the_end
+    rdf.add((my_prop, RDF.type, RDF.Property))
+    rdf.add((my_prop, RDFS.domain, CRM['E52_Time-Span']))
+    rdf.add((my_prop, RDFS.range, XSD.dateTime))
+    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P82_at_some_time_within))
 
     # parse xml
     print "### SOURCING FILE " + options.source_file

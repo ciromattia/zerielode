@@ -1,6 +1,10 @@
 # Zeri e Lode
 ## Extracting the Zeri photo archive to Linked Open Data
 
+This set of Python scripts aim to convert a FZeri XML catalogue into CIDOC-CRM compliant RDF document.
+
+[CIDOC-CRM v5.0.4](http://www.cidoc-crm.org/official_release_cidoc.html) has been used as reference ([RDFs file](http://www.cidoc-crm.org/rdfs/cidoc_crm_v5.0.4_official_release.rdfs))
+
 ## REQUIREMENTS
 - Python 2.7
 
