@@ -20,7 +20,7 @@ unit_fzeri_to_qudt = {
 production_roles = {
     'editore':      CRM.P14a_carried_out_as_publisher_by,
     'committente':  CRM.P14b_carried_out_as_customer_by,
-    'distributore': CRM.P14c_carried_out_as_distributor_by
+    'distributore': CRM.P14c_carried_out_as_distributor_by,
 }
 
 

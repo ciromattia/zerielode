@@ -123,8 +123,9 @@ class FZeriParserSchedaF:
         # Updates
         if "AGGD" in self.dict:
             for index in self.dict['AGGD']:
-                transformation = FZERI_FENTRY[entry_id + '/cataloguing/update/' + index]
-                timespan = FZERI_FENTRY[entry_id + '/cataloguing/date/']
+                transformation = FZERI_FENTRY[entry_id + '/cataloguing/update/' + str(index)]
+                self.graph.add((transformation, RDF.type, CRM.E81_Transformation))
+                timespan = FZERI_FENTRY[entry_id + '/cataloguing/update/' + str(index) + '/date/']
                 self.graph.add((timespan, RDF.type, CRM['E52_Time-Span']))
                 self.graph.add((timespan, RDFS.label, Literal(self.dict['AGGD'][index])))
                 self.graph.add((transformation, CRM['P4_has_time-span'], timespan))
@@ -332,21 +333,21 @@ class FZeriParserSchedaF:
                     address = FZERI_THESAURI['actor/' + sha1(self.dict['PDFN'][index].encode('utf-8')).hexdigest() +
                                              '/address/']
                     self.graph.add((address, RDF.type, CRM.E51_Contact_Point))
-                    self.graph.add((address, RDFS.label, Literal(self.dict['PDFI'])))
+                    self.graph.add((address, RDFS.label, Literal(self.dict['PDFI'][index])))
                     self.graph.add((actor, CRM.P76_has_contact_point, address))
                 if "PDFM" in self.dict and index in self.dict['PDFM']:
                     assignment = FZERI_FENTRY[entry_id + '/photo/production/' + str(production_counter) + '/assignment']
                     self.graph.add((assignment, RDF.type, CRM.E13_Attribute_Assignment))
-                    self.graph.add((assignment, CRM.P17_was_motivated_by, Literal(self.dict['AUFM'])))
+                    self.graph.add((assignment, CRM.P17_was_motivated_by, Literal(self.dict['PDFM'][index])))
                     self.graph.add((p_production, CRM.P140i_was_attributed_by, assignment))
                 if "PDFL" in self.dict and index in self.dict['PDFL']:
                     location = FZERI_FENTRY[entry_id + '/photo/production/' + str(production_counter) + '/location']
                     self.graph.add((location, RDF.type, CRM.E53_Place))
-                    self.graph.add((location, RDFS.label, Literal(self.dict['PDFL'])))
+                    self.graph.add((location, RDFS.label, Literal(self.dict['PDFL'][index])))
                     self.graph.add((p_production, CRM.P7_took_place_at, location))
                 prod_property = None
                 if "PDFR" in self.dict and index in self.dict['PDFR']:
-                    prod_property = fzeri_conversion_maps.production_role_to_property(self.dict['PDFR'])
+                    prod_property = fzeri_conversion_maps.production_role_to_property(self.dict['PDFR'][index])
                 if prod_property:
                     self.graph.add((p_production, prod_property, actor))
                 else:
@@ -399,6 +400,31 @@ class FZeriParserSchedaF:
                 self.graph.add((location, CRM.P87_is_identified_by, collection))
             self.graph.add((myphoto, CRM.P55_has_current_location, location))
 
+        # Previous physical locations (provenance)
+        if "PRCM" in self.dict:
+            for index in self.dict['PRCM']:
+                provenance = FZERI_THESAURI['/location/' + sha1(self.dict['PRCM'][index].encode('utf-8')).hexdigest()]
+                self.graph.add((provenance, RDF.type, CRM.E53_Place))
+                contained = provenance
+                if "PRVS" in self.dict and index in self.dict['PRVS']:
+                    container = FZERI_THESAURI['/location/' +
+                                               sha1(self.dict['PRVS'][index].encode('utf-8')).hexdigest()]
+                    self.graph.add((container, RDF.type, CRM.E53_Place))
+                    self.graph.add((container, RDFS.label, Literal(self.dict['PRVS'][index])))
+                    self.graph.add((contained, CRM.P59i_is_located_on_or_within, container))
+                if "PRDU" in self.dict and index in self.dict['PRDU']:
+                    activity = FZERI_FENTRY[entry_id + '/photo/provenance/' + str(index)]
+                    self.graph.add((activity, RDF.type, CRM.E9_Move))
+                    timespan = FZERI_FENTRY[entry_id + '/photo/provenance/' + str(index) + '/date/']
+                    self.graph.add((timespan, RDF.type, CRM['E52_Time-Span']))
+                    self.graph.add((timespan, CRM.P82b_end_of_the_end, Literal(self.dict['PRDU'][index])))
+                    if "PRDI" in self.dict:
+                        self.graph.add((timespan, CRM.P82a_begin_of_the_begin, Literal(self.dict['PRDI'][index])))
+                    self.graph.add((activity, CRM['P4_has_time-span'], timespan))
+                    self.graph.add((activity, CRM.P26_moved_from, provenance))
+                    self.graph.add((activity, CRM.P25_moved, myphoto))
+                self.graph.add((myphoto, CRM.P53_has_former_or_current_location, provenance))
+
         # Ownership
         if "CDGS" in self.dict:
             acquisition = FZERI_FENTRY[entry_id + '/photo/ownership/']
@@ -418,14 +444,14 @@ class FZeriParserSchedaF:
         # Digital images
         if "FTAN" in self.dict:
             for index in self.dict['FTAN']:
-                digital_image = FZERI_DIMAGES[self.dict['FTAN'][index]]
+                digital_image = FZERI_DIMAGES[self.dict['FTAN'][index].replace('\\', '/')]
                 self.graph.add((digital_image, RDF.type, CRM.E38_Image))
                 if "FTAT" in self.dict and index in self.dict['FTAT']:
                     self.graph.add((digital_image, CRM.P3_has_note, Literal(self.dict['FTAT'][index])))
                 if "FTAP" in self.dict and index in self.dict['FTAP']:
-                    image_type = FZERI_THESAURI['foto_type/' + self.dict['FTAP']]
+                    image_type = FZERI_THESAURI['foto_type/' + quote_plus(self.dict['FTAP'][index])]
                     self.graph.add((image_type, RDF.type, CRM.E55_Type))
-                    self.graph.add((image_type, RDFS.label, Literal(self.dict['FTAP'])))
+                    self.graph.add((image_type, RDFS.label, Literal(self.dict['FTAP'][index])))
                     self.graph.add((digital_image, CRM.P2_has_type, image_type))
                 # TODO: FTAX and VERSO
                 if "FTAX" in self.dict and index in self.dict['FTAX']:
