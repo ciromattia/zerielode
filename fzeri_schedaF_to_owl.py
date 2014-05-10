@@ -10,6 +10,7 @@ import sys
 import argparse
 from os.path import dirname, realpath
 from os import mkdir
+import logging
 from rdflib import Graph, RDF, RDFS, XSD, Namespace
 try:
     from lxml import etree
@@ -26,7 +27,7 @@ CRM = Namespace("http://www.cidoc-crm.org/cidoc-crm/")
 def parse_options():
     global options
     parser = argparse.ArgumentParser(description='FZeri to CIDOC-CRM catalog conversion script.')
-    parser.add_argument('source_file', help='FZeri catalog file path', )
+    parser.add_argument('source_file', nargs='+', help='FZeri catalog file(s) path')
     parser.add_argument('--single-entry', action="store_true",
                         help='Outputs entries in a single file for each one.')
     parser.add_argument('-o', '--output', dest="output_file", default="fzeri.ttl",
@@ -49,28 +50,31 @@ def format_to_ext(fmt):
 def main():
     global options
     parse_options()
+    logging.basicConfig()
     if options.single_entry:
         output_dir = dirname(realpath(__file__)) + "/" + options.output_file
         ext = format_to_ext(options.format)
         mkdir(output_dir)
         # parse xml
-        print "### SOURCING FILE " + options.source_file
-        xml = etree.parse(options.source_file)
-        for xmlentry in xml.findall("SCHEDA"):
-            # create a new Graph
-            rdf = init_graph()
-            entry = FZeriParserSchedaF(xmlentry, rdf)
-            entry.parse()
-            rdf.serialize(output_dir + "/" + entry.entry_id + ext, format=options.format)
+        for source_file in options.source_file:
+            print "### SOURCING FILE " + source_file
+            xml = etree.parse(source_file)
+            for xmlentry in xml.findall("SCHEDA"):
+                # create a new Graph
+                rdf = init_graph()
+                entry = FZeriParserSchedaF(xmlentry, rdf)
+                entry.parse()
+                rdf.serialize(output_dir + "/" + entry.entry_id + ext, format=options.format)
     else:
         # create a new Graph
         rdf = init_graph()
         # parse xml
-        print "### SOURCING FILE " + options.source_file
-        xml = etree.parse(options.source_file)
-        for xmlentry in xml.findall("SCHEDA"):
-            entry = FZeriParserSchedaF(xmlentry, rdf)
-            entry.parse()
+        for source_file in options.source_file:
+            print "### SOURCING FILE " + source_file
+            xml = etree.parse(source_file)
+            for xmlentry in xml.findall("SCHEDA"):
+                entry = FZeriParserSchedaF(xmlentry, rdf)
+                entry.parse()
         rdf.serialize(dirname(realpath(__file__)) + "/" + options.output_file, format=options.format)
 
 

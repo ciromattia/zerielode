@@ -39,7 +39,7 @@ class FZeriParserSchedaF:
             print "Entry has no ID!!!"
             return
         try:
-            self.negative_id = self.xmlentry.find("PARAGRAFO/ROFI").text
+            self.negative_id = quote_plus(self.xmlentry.find("PARAGRAFO/ROFI").text)
         except AttributeError:
             self.negative_id = None
 
@@ -81,7 +81,8 @@ class FZeriParserSchedaF:
     def parse_paragraph_copyright(self, paragraph):
         copyright_exp_date = FZERI_FENTRY[self.entry_id + '/copyright']
         self.graph.add((copyright_exp_date, RDF.type, CRM.E30_Right))
-        self.graph.add((copyright_exp_date, CRM.P3_has_note, Literal(paragraph.find("CRPD").text)))
+        if paragraph.find("CRPD") is not None:
+            self.graph.add((copyright_exp_date, CRM.P3_has_note, Literal(paragraph.find("CRPD").text)))
         self.graph.add((copyright_exp_date, CRM.P104i_applies_to, self.myentry))
         self.graph.add((self.myentry, CRM.P104_is_subject_to, copyright_exp_date))
         ### end COPYRIGHT paragraph
