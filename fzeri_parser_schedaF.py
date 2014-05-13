@@ -7,7 +7,7 @@ __copyright__ = '2014, Ciro Mattia Gonano <ciromattia@gmail.com>'
 __docformat__ = 'restructuredtext en'
 
 from rdflib import Namespace, Literal
-from rdflib.namespace import RDF, RDFS, DCTERMS, FOAF
+from rdflib.namespace import RDF, RDFS, DC, DCTERMS, FOAF
 from hashlib import sha1
 from urllib import quote_plus
 
@@ -17,7 +17,8 @@ PRO = Namespace("http://purl.org/spar/pro")
 TIME = Namespace("http://www.w3.org/2006/time")
 FABIO = Namespace("http://purl.org/spar/fabio/")
 FENTRY = Namespace("http://www.essepuntato.it/2014/03/fentry/")
-VCARD = Namespace("http://www.w3.org/TR/vcard-rdf/")
+FRBR = Namespace("http://purl.org/vocab/frbr/core#")
+PROV = Namespace("http://www.w3.org/ns/prov#")
 # TODO: add DATACITE to identificators
 DATACITE = Namespace("http://purl.org/spar/datacite")
 QUDT = Namespace("http://qudt.org/vocab/unit#")
@@ -54,24 +55,6 @@ class FZeriParserSchedaF:
         except AttributeError:
             self.negative_id = None
 
-        # Init graph with the entry and various global resources
-        self.myentry = FZERI_FENTRY[self.entry_id]
-        self.graph.add((self.myentry, RDF.type, CRM.E31_Document))
-        self.graph.add((self.myentry, CRM.P1_is_identified_by, Literal(self.entry_id)))
-        title = FZERI_FENTRY[self.entry_id + '/title']
-        self.graph.add((title, RDF.type, CRM.E35_Title))
-        self.graph.add((title, RDF.type, DCTERMS.title))
-        self.graph.add((title, RDFS.label, Literal(self.xmlentry.attrib['intestazione'])))
-        self.graph.add((self.myentry, CRM.P102_has_title, title))
-        myphoto = FZERI_FENTRY[self.entry_id + '/photo']
-        self.graph.add((myphoto, RDF.type, CRM['E22_Man-Made_Object']))
-        self.graph.add((myphoto, CRM.P1_is_identified_by, Literal(self.entry_id)))
-        self.graph.add((self.myentry, CRM.P70_documents, myphoto))
-        production = FZERI_FENTRY[self.entry_id + '/photo/production']
-        self.graph.add((production, RDF.type, CRM.E12_Production))
-        self.graph.add((production, CRM.P108_produced, myphoto))
-        self.graph.add((myphoto, CRM.P108i_was_produced_by, production))
-
         # Process all paragraphs
         for child in self.xmlentry.findall("PARAGRAFO"):
             if len(child):   # paragraph does contain at least one subelement
@@ -85,6 +68,33 @@ class FZeriParserSchedaF:
                     # call the appropriate parse_paragraph_* function
                     getattr(self, "parse_paragraph_" + child.attrib["etichetta"].lower().
                             replace(' ', '_').replace('(', '').replace(')', ''))(child)
+
+    # Init graph with the entry and various global resources
+    def init_graph(self):
+        self.myentry = FZERI_FENTRY[self.entry_id]
+        self.graph.add((self.myentry, RDF.type, CRM.E31_Document))
+        self.graph.add((self.myentry, RDF.type, FENTRY.FEntry))
+        self.graph.add((self.myentry, CRM.P1_is_identified_by, Literal(self.entry_id)))
+        title = FZERI_FENTRY[self.entry_id + '/title']
+        self.graph.add((title, RDF.type, CRM.E35_Title))
+        self.graph.add((title, RDF.type, DCTERMS.title))
+        self.graph.add((title, RDFS.label, Literal(self.xmlentry.attrib['intestazione'])))
+        self.graph.add((self.myentry, CRM.P102_has_title, title))
+        myphoto = FZERI_FENTRY[self.entry_id + '/photo']
+        self.graph.add((myphoto, RDF.type, CRM['E22_Man-Made_Object']))
+        self.graph.add((myphoto, RDF.type, FENTRY.Photograph))
+        self.graph.add((myphoto, CRM.P1_is_identified_by, Literal(self.entry_id)))
+        self.graph.add((self.myentry, CRM.P70_documents, myphoto))
+        self.graph.add((myphoto, CRM.P70i_is_documented_in, self.myentry))
+        self.graph.add((self.myentry, FENTRY.describes, myphoto))
+        production = FZERI_FENTRY[self.entry_id + '/photo/production']
+        self.graph.add((production, RDF.type, CRM.E12_Production))
+        self.graph.add((production, CRM.P108_produced, myphoto))
+        self.graph.add((myphoto, CRM.P108i_was_produced_by, production))
+        
+        am = FZERI_FENTRY[self.entry_id + '/photo/analoguemanifestation']
+        self.graph.add((am, RDF.type, FABIO.AnalogueManifestation))
+        self.graph.add((myphoto, FABIO.hasManifestation, am))
 
     # begin COPYRIGHT paragraph
     # COPYRIGHT contains only one field
@@ -329,19 +339,15 @@ class FZeriParserSchedaF:
                 self.graph.add((myphoto, CRM.P2_has_type, Literal(node.text)))
             elif node.tag == "QNTN":
                 self.graph.add((myphoto, CRM.P57_has_number_of_parts, Literal(node.text)))
-            # TODO: OGTB (i.e. bibliographic level) has not been mapped yet
             elif node.tag == "OGTB":
-                pass
-            # TODO: OGTS (i.e. format) has not been mapped yet
-            elif node.tag == "OGTB":
-                pass
-            # TODO: fix material definition
-            # elif node.tag == "MTX":
-            #     self.graph.add((myphoto, CRM.P45_consist_of, FZERI_THESAURI['material'][node.text]))
+                self.graph.add((myphoto, DC.type, Literal(node.text)))
+            elif node.tag == "OGTS":
+                self.graph.add((myphoto, DC.format, FZERI_THESAURI['photo_format/' + quote_plus(node.text)]))
+            elif node.tag == "MTX":
+                self.graph.add((myphoto, DC.format, FZERI_THESAURI['photo_color/' + quote_plus(node.text)]))
             elif node.tag == "MTC":
-                #self.graph.add((myphoto, CRM.P45_consist_of, FZERI_THESAURI['material/' +
-                #  quote_plus(self.dict['MTC'])]))
-                pass
+                self.graph.add((myphoto, CRM.P45_consist_of, FZERI_THESAURI['material/' +
+                                                                            quote_plus(self.dict['MTC'])]))
             elif node.tag in dimensions.keys():
                 dimension = FZERI_FENTRY[self.entry_id + '/photo/' + dimensions[node.tag]]
                 self.graph.add((dimension, RDF.type, CRM.E54_Dimension))
@@ -357,7 +363,7 @@ class FZeriParserSchedaF:
                     self.graph.add((dimension, CRM.P2_has_type,
                                     FZERI_THESAURI['dimension/' + quote_plus(paragraph.find("MISO").text)]))
                     self.graph.add((FZERI_THESAURI['dimension/' + quote_plus(paragraph.find("MISO").text)],
-                                    CRM.P2_has_type, dimension))
+                                    CRM.P2i_is_type_of, dimension))
                 self.graph.add((dimension, CRM.P43i_is_dimension_of, myphoto))
                 self.graph.add((myphoto, CRM.P43_has_dimension, dimension))
 
@@ -384,13 +390,16 @@ class FZeriParserSchedaF:
                 self.graph.add((depicted_subject, CRM.P1_is_identified_by, Literal(node.text)))
             elif node.tag == "SGLT":
                 self.graph.add((subj_title, RDFS.label, Literal(node.text)))
-                self.graph.add((depicted_subject, CRM.P102a_has_proper_title, subj_title))
+                self.graph.add((subj_title, FENTRY.isProperTitleOf, depicted_subject))
+                self.graph.add((depicted_subject, FENTRY.hasProperTitle, subj_title))
             elif node.tag == "SGLL":
                 self.graph.add((subj_title, RDFS.label, Literal(node.text)))
-                self.graph.add((depicted_subject, CRM.P102b_has_parallel_title, subj_title))
+                self.graph.add((subj_title, FENTRY.isParallelTitleOf, depicted_subject))
+                self.graph.add((depicted_subject, FENTRY.hasParallelTitle, subj_title))
             elif node.tag == "SGLA":
                 self.graph.add((subj_title, RDFS.label, Literal(node.text)))
-                self.graph.add((depicted_subject, CRM.P102c_has_attributed_title, subj_title))
+                self.graph.add((subj_title, FENTRY.isAttributedTitleOf, depicted_subject))
+                self.graph.add((depicted_subject, FENTRY.hasAttributedTitle, subj_title))
             elif node.tag == "SGLS":
                 self.graph.add((subj_title, CRM.P3_has_note, Literal(node.text)))
             elif node.tag == "FTAT":
@@ -439,7 +448,8 @@ class FZeriParserSchedaF:
                 context = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/' + str(rep) + '/author/context']
                 self.graph.add((context, RDF.type, CRM.E62_String))
                 self.graph.add((context, RDFS.label, Literal(node.text)))
-                self.graph.add((actor, CRM.P3a_cultural_context, context))
+                self.graph.add((actor, FENTRY.hasCulturalContext, context))
+                self.graph.add((context, FENTRY.isCulturalContextOf, actor))
         ### end AUTHOR paragraph
 
     # begin DATING paragraph
@@ -770,23 +780,34 @@ class FZeriParserSchedaF:
     # begin DIGITAL IMAGE paragraph
     # example:
     #     VERSO: Pubblico
+    #     FTAT: insieme
     #     FTAN: \80000\45600\45423.jpg
     #     FTAX: allegata
-    # 	  FTAP: fotografia digitale
+    #     FTAP: fotografia digitale
     def parse_paragraph_digital_image(self, paragraph, rep):
         image_id = paragraph.find('FTAN')
         if image_id is None:
             return
-        myphoto = FZERI_FENTRY[self.entry_id + '/photo/' + str(rep)]
-        digital_image = FZERI_DIMAGES[image_id.text.replace('\\', '/')]
+        myphoto = FZERI_FENTRY[self.entry_id + '/photo']
+        digital_image = FZERI_FENTRY[self.entry_id + '/photo/dimage/' + str(rep)]
         self.graph.add((digital_image, RDF.type, CRM.E38_Image))
+        self.graph.add((digital_image, RDF.type, FABIO.DigitalManifestation))
+        self.graph.add((self.myentry, FENTRY.describes, digital_image))
+        self.graph.add((myphoto, FABIO.hasManifestation, digital_image))
         self.graph.add((digital_image, CRM.P138_represents, myphoto))
         self.graph.add((myphoto, CRM.P138i_has_representation, digital_image))
+        img_file = FZERI_DIMAGES[image_id.text.replace('\\', '/')]
+        self.graph.add((img_file, RDF.type, CRM.E38_Image))
+        self.graph.add((img_file, RDF.type, FABIO.ComputerFile))
+        self.graph.add((img_file, FRBR.exemplar, digital_image))
+        self.graph.add((self.myentry, FENTRY.describes, img_file))
+        self.graph.add((img_file, CRM.P138_represents, digital_image))
+        self.graph.add((digital_image, CRM.P138i_has_representation, img_file))
         for node in paragraph:
             if node.tag == "FTAT":
                 self.graph.add((digital_image, CRM.P3_has_note, Literal(node.text)))
-            elif node.tag == 'FTAP':
-                image_type = FZERI_THESAURI['foto_type/' + quote_plus(node.text)]
+            elif node.tag == "FTAP":
+                image_type = FZERI_THESAURI['photo_type/' + quote_plus(node.text)]
                 self.graph.add((image_type, RDF.type, CRM.E55_Type))
                 self.graph.add((image_type, RDFS.label, Literal(node.text)))
                 self.graph.add((image_type, CRM.P2i_is_type_of, digital_image))

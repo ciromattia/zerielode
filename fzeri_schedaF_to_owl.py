@@ -95,25 +95,12 @@ def init_graph():
     rdf.bind("qudt", "http://qudt.org/vocab/unit#")
     rdf.bind("pro", "http://purl.org/spar/pro")
     rdf.bind("time", "http://www.w3.org/2006/time")
+    rdf.bind("frbr", "http://purl.org/vocab/frbr/core#")
+    rdf.bind("fabio", "http://purl.org/spar/fabio/")
+    rdf.bind("fentry", "http://www.essepuntato.it/2014/03/fentry/")
+    rdf.bind("prov", "http://www.w3.org/ns/prov#")
+    rdf.bind("datacite", "http://purl.org/spar/datacite")
     rdf.bind("fzeriThes", "http://fe.fondazionezeri.unibo.it/thesauri/")
-
-    # Specialize property CRM.P102_has_title with proper/parallel/attributed flavours
-    # TODO: add properties to FENTRY, not on this ontology
-    my_prop = CRM.P102a_has_proper_title
-    rdf.add((my_prop, RDF.type, RDF.Property))
-    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P102_has_title))
-    my_prop = CRM.P102b_has_parallel_title
-    rdf.add((my_prop, RDF.type, RDF.Property))
-    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P102_has_title))
-    my_prop = CRM.P102c_has_attributed_title
-    rdf.add((my_prop, RDF.type, RDF.Property))
-    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P102_has_title))
-
-    my_prop = CRM.P3a_cultural_context
-    rdf.add((my_prop, RDF.type, RDF.Property))
-    rdf.add((my_prop, RDFS.domain, CRM.E1_CRM_Entity))
-    rdf.add((my_prop, RDFS.range, RDFS.Literal))
-    rdf.add((my_prop, RDFS.subPropertyOf, CRM.P3_has_note))
     return rdf
 
 if __name__ == "__main__":
