@@ -247,9 +247,13 @@ class FZeriParserSchedaF:
         self.graph.add((creation, RDF.type, CRM.E65_Creation))
         for node in paragraph:
             if node.tag == "CMPD":
-                timespan = FZERI_FENTRY[self.entry_id + '/cataloguing/date']
+                timespan = FZERI_FENTRY[self.entry_id + '/cataloguing/ts']
                 self.graph.add((timespan, RDF.type, CRM['E52_Time-Span']))
-                self.graph.add((timespan, RDFS.label, Literal(node.text)))
+                date = FZERI_FENTRY[self.entry_id + '/cataloguing/date']
+                self.graph.add((date, RDF.type, CRM.E49_Time_Appellation))
+                self.graph.add((date, RDFS.label, Literal(node.text)))
+                self.graph.add((date, CRM.P78i_identifies, timespan))
+                self.graph.add((timespan, CRM.P78_is_identified_by, date))
                 self.graph.add((timespan, CRM['P4i_is_time-span_of'], timespan))
                 self.graph.add((creation, CRM['P4_has_time-span'], timespan))
             elif node.tag == "CMPN":
@@ -271,11 +275,15 @@ class FZeriParserSchedaF:
         self.graph.add((transformation, RDF.type, CRM.E81_Transformation))
         for node in paragraph:
             if node.tag == "AGGD":
-                timespan = FZERI_FENTRY[self.entry_id + '/cataloguing/update/' + str(rep) + '/date']
+                timespan = FZERI_FENTRY[self.entry_id + '/cataloguing/update/' + str(rep) + '/ts']
                 self.graph.add((timespan, RDF.type, CRM['E52_Time-Span']))
-                self.graph.add((timespan, RDFS.label, Literal(node.text)))
                 self.graph.add((timespan, CRM['P4i_is_time-span_of'], transformation))
                 self.graph.add((transformation, CRM['P4_has_time-span'], timespan))
+                date = FZERI_FENTRY[self.entry_id + '/cataloguing/update/' + str(rep) + '/date']
+                self.graph.add((date, RDF.type, CRM.E49_Time_Appellation))
+                self.graph.add((date, RDFS.label, Literal(node.text)))
+                self.graph.add((date, CRM.P78i_identifies, timespan))
+                self.graph.add((timespan, CRM.P78_is_identified_by, date))
             elif node.tag == "AGGN":
                 actor = FZERI_FENTRY[self.entry_id + '/cataloguing/update/' + str(rep) + '/actor']
                 self.graph.add((actor, RDF.type, CRM.E39_Actor))
@@ -634,7 +642,11 @@ class FZeriParserSchedaF:
             elif node.tag == "PDFD":
                 timespan = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter) + '/date']
                 self.graph.add((timespan, RDF.type, CRM['E52_Time-Span']))
-                self.graph.add((timespan, RDFS.label, Literal(node.text)))
+                date = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter) + '/date/year']
+                self.graph.add((date, RDF.type, CRM.E49_Time_Appellation))
+                self.graph.add((date, RDFS.label, Literal(node.text)))
+                self.graph.add((date, CRM.P78i_identifies, timespan))
+                self.graph.add((timespan, CRM.P78_is_identified_by, date))
                 self.graph.add((timespan, CRM['P4i_is_time-span_of'], p_production))
                 self.graph.add((p_production, CRM['P4_has_time-span'], timespan))
             # TODO: EDIT has yet to be mapped
@@ -669,7 +681,11 @@ class FZeriParserSchedaF:
             if node.tag == "LRD":
                 timespan = FZERI_FENTRY[self.entry_id + '/photo/creation/date']
                 self.graph.add((timespan, RDF.type, CRM['E52_Time-Span']))
-                self.graph.add((timespan, RDFS.label, Literal(node.text)))
+                date = FZERI_FENTRY[self.entry_id + '/photo/creation/date/year']
+                self.graph.add((date, RDF.type, CRM.E49_Time_Appellation))
+                self.graph.add((date, RDFS.label, Literal(node.text)))
+                self.graph.add((date, CRM.P78i_identifies, timespan))
+                self.graph.add((timespan, CRM.P78_is_identified_by, date))
                 self.graph.add((timespan, CRM['P4i_is_time-span_of'], creation))
                 self.graph.add((creation, CRM['P4_has_time-span'], timespan))
             elif node.tag == "LRCS":
