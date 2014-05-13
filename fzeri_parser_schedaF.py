@@ -14,6 +14,7 @@ import fzeri_conversion_maps
 # init namespaces
 CRM = Namespace("http://www.cidoc-crm.org/cidoc-crm/")
 PRO = Namespace("http://purl.org/spar/pro")
+DUBLINCORE = Namespace("http://purl.org/dc/terms/title")
 TIME = Namespace("http://www.w3.org/2006/time")
 FOAF = Namespace("http://xmlns.com/foaf/spec/#")
 FABIO = Namespace("http://purl.org/spar/fabio/")
@@ -54,8 +55,8 @@ class FZeriParserSchedaF:
         self.graph.add((self.myentry, CRM.P1_is_identified_by, Literal(self.entry_id)))
         title = FZERI_FENTRY[self.entry_id + '/title']
         self.graph.add((title, RDF.type, CRM.E35_Title))
+        self.graph.add((title, RDF.type, DUBLINCORE.title))
         self.graph.add((title, RDFS.label, Literal(self.xmlentry.attrib['intestazione'])))
-        # TODO: Qui sarebbe carino usare “dcterms:title” in aggiunta.
         self.graph.add((self.myentry, CRM.P102_has_title, title))
         myphoto = FZERI_FENTRY[self.entry_id + '/photo']
         self.graph.add((myphoto, RDF.type, CRM['E22_Man-Made_Object']))
@@ -369,6 +370,7 @@ class FZeriParserSchedaF:
         depicted_subject = FZERI_FENTRY[self.entry_id + '/photo/subject']
         subj_title = FZERI_FENTRY[self.entry_id + '/photo/subject/title']
         self.graph.add((subj_title, RDF.type, CRM.E35_Title))
+        self.graph.add((title, RDF.type, DUBLINCORE.title))
         self.graph.add((depicted_subject, RDF.type, CRM.E1_CRM_Entity))
         self.graph.add((depicted_subject, CRM.P62i_is_depicted_by, myphoto))
         self.graph.add((myphoto, CRM.P62_depicts, depicted_subject))
