@@ -101,13 +101,20 @@ class FZeriParserSchedaF:
     # SUPERVISOR contains only one field
     # example:
     #     FUR: Giudici C.
-    # TODO: FUR has yet to be mapped
     def parse_paragraph_supervisor(self, paragraph):
+        node = paragraph.find("FUR")
+        if node is None:
+            return
         supervisor = FZERI_FENTRY[self.entry_id + '/supervisor']
         self.graph.add((supervisor, RDF.type, CRM.E39_Actor))
-        self.graph.add((supervisor, RDFS.label, Literal(paragraph.find("FUR").text)))
-        # TODO: FUR has yet to be mapped
-        #self.graph.add((self.myentry, CRM, supervisor))
+        self.graph.add((supervisor, RDF.type, FOAF.Agent))
+        self.graph.add((supervisor, RDFS.label, Literal(node.text)))
+        self.graph.add((supervisor, FOAF.name, Literal(node.text)))
+        creation = FZERI_FENTRY[self.entry_id + '/cataloguing']
+        self.graph.add((creation, RDF.type, CRM.E65_Creation))
+        self.graph.add((creation, CRM.P11_had_participant, supervisor))
+        self.graph.add((supervisor, CRM.P11i_participated_in, creation))
+        # TODO: add PRO relations
         ### end SUPERVISOR paragraph
 
     # begin CLASSIFICATION paragraph
