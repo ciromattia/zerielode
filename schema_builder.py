@@ -26,16 +26,20 @@ out = {}
 def parse(xmlentry):
     # flatten XML to dict
     for child in xmlentry.findall("PARAGRAFO"):
-        if not child.attrib["etichetta"] in out:
-            out[child.attrib["etichetta"]] = {}
         if len(child):   # paragraph does contain at least one subelement
             if child[0].tag == "RIPETIZIONE":
+                label = child.attrib["etichetta"] + "[r]"
+                if not label in out:
+                    out[label] = {}
                 for rep in child:
                     for subchild in rep:
-                        if not subchild.tag in out[child.attrib["etichetta"]]:
-                            out[child.attrib["etichetta"]][subchild.tag] = {}
-                        out[child.attrib["etichetta"]][subchild.tag] = subchild.text
+                        if not subchild.tag in out[label]:
+                            out[label][subchild.tag] = {}
+                        out[label][subchild.tag] = subchild.text
             else:
+                label = child.attrib["etichetta"]
+                if not label in out:
+                    out[label] = {}
                 for subchild in child:
                     if not subchild.tag in out[child.attrib["etichetta"]]:
                         out[child.attrib["etichetta"]][subchild.tag] = {}

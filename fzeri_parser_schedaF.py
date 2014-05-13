@@ -16,6 +16,8 @@ CRM = Namespace("http://www.cidoc-crm.org/cidoc-crm/")
 PRO = Namespace("http://purl.org/spar/pro")
 TIME = Namespace("http://www.w3.org/2006/time")
 FOAF = Namespace("http://xmlns.com/foaf/spec/#")
+FABIO = Namespace("http://purl.org/spar/fabio/")
+FENTRY = Namespace("http://www.essepuntato.it/2014/03/fentry/")
 FZERI_FENTRY = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/schedaF/")
 FZERI_OAENTRY = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/schedaOA/")
 FZERI_NEGATIVE = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/negative/")
@@ -68,7 +70,7 @@ class FZeriParserSchedaF:
                         # call the appropriate parse_paragraph_* function
                         getattr(self, "parse_paragraph_" +
                                       child.attrib["etichetta"].lower().
-                                replace(' ', '_').replace('(', '').replace(')', ''))(repchild)
+                                replace(' ', '_').replace('(', '').replace(')', ''))(repchild, repchild.attrib['prog'])
                 else:
                     # call the appropriate parse_paragraph_* function
                     getattr(self, "parse_paragraph_" + child.attrib["etichetta"].lower().
@@ -257,20 +259,18 @@ class FZeriParserSchedaF:
     # example:
     #     AGGD: 09/10/2012
     #     AGGN: Marcello Rossini
-    def parse_paragraph_updating(self, paragraph):
-        index = 1
-        transformation = FZERI_FENTRY[self.entry_id + '/cataloguing/update/' + str(index)]
-        # TODO add index for repetitions
+    def parse_paragraph_updating(self, paragraph, rep):
+        transformation = FZERI_FENTRY[self.entry_id + '/cataloguing/update/' + str(rep)]
         self.graph.add((transformation, RDF.type, CRM.E81_Transformation))
         for node in paragraph:
             if node.tag == "AGGD":
-                timespan = FZERI_FENTRY[self.entry_id + '/cataloguing/update/' + str(index) + '/date']
+                timespan = FZERI_FENTRY[self.entry_id + '/cataloguing/update/' + str(rep) + '/date']
                 self.graph.add((timespan, RDF.type, CRM['E52_Time-Span']))
                 self.graph.add((timespan, RDFS.label, Literal(node.text)))
                 self.graph.add((timespan, CRM['P4i_is_time-span_of'], transformation))
                 self.graph.add((transformation, CRM['P4_has_time-span'], timespan))
             elif node.tag == "AGGN":
-                actor = FZERI_FENTRY[self.entry_id + '/cataloguing/update/' + str(index) + '/actor']
+                actor = FZERI_FENTRY[self.entry_id + '/cataloguing/update/' + str(rep) + '/actor']
                 self.graph.add((actor, RDF.type, CRM.E39_Actor))
                 self.graph.add((actor, RDFS.label, Literal(node.text)))
                 self.graph.add((actor, CRM.P11i_participated_in, transformation))
@@ -332,20 +332,6 @@ class FZeriParserSchedaF:
                 self.graph.add((dimension, CRM.P43i_is_dimension_of, myphoto))
                 self.graph.add((myphoto, CRM.P43_has_dimension, dimension))
 
-    # begin DIGITAL IMAGE paragraph
-    # example:
-    #     VERSO: Pubblico
-    #     FTAT: insieme
-    #     FTAN: \80000\45600\45423.jpg
-    #     FTAX: allegata
-    #     FTAP: fotografia digitale
-    def parse_paragraph_digital_image(self, paragraph):
-        myphoto = FZERI_FENTRY[self.entry_id + '/photo']
-        for node in paragraph:
-            if node.tag == "FTAT":
-                self.graph.add((myphoto, CRM.P3_has_note, Literal(node.text)))
-        ### end DIGITAL IMAGE paragraph
-
     # begin SUBJECT paragraph
     # example:
     #     SGLA: Girolamo di Benvenuto (Girolamo del Guasta) - sec. XVI - Madonna con Bambino e san Giovannino
@@ -389,37 +375,37 @@ class FZeriParserSchedaF:
     #     AUTB: Scuola italiana, scuola toscana, scuola senese
     #     AUTP: Girolamo del Guasta
     #     AUTI: Palmezzano Marco (?)
-    def parse_paragraph_author(self, paragraph):
+    def parse_paragraph_author(self, paragraph, rep):
         # TODO: isn't it already described in the actual artwork?
-        production = FZERI_OAENTRY[self.oaentry_id + '/artwork/production']
+        production = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/' + str(rep)]
         self.graph.add((production, RDF.type, CRM.E12_Production))
         self.graph.add((production, CRM.P108_produced, FZERI_OAENTRY[self.oaentry_id]))
         self.graph.add((FZERI_OAENTRY[self.oaentry_id], CRM.P108i_was_produced_by, production))
-        actor = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/author']
+        actor = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/' + str(rep) + '/author']
         self.graph.add((actor, RDF.type, CRM.E39_Actor))
         self.graph.add((actor, CRM.P14i_performed, production))
         self.graph.add((production, CRM.P14_carried_out_by, actor))
         for node in paragraph:
             if node.tag == "AUTN":
-                proper_name = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/author/proper_name']
+                proper_name = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/' + str(rep) + '/author/proper_name']
                 self.graph.add((proper_name, RDF.type, CRM.E82_Actor_Appellation))
                 self.graph.add((proper_name, RDFS.label, Literal(node.text)))
                 self.graph.add((proper_name, CRM.P131i_identifies, actor))
                 self.graph.add((actor, CRM.P131_is_identified_by, proper_name))
             elif node.tag == "AUTP":
-                pseudonym = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/author/pseudonym']
+                pseudonym = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/' + str(rep) + '/author/pseudonym']
                 self.graph.add((pseudonym, RDF.type, CRM.E82_Actor_Appellation))
                 self.graph.add((pseudonym, RDFS.label, Literal(node.text)))
                 self.graph.add((pseudonym, CRM.P131i_identifies, actor))
                 self.graph.add((actor, CRM.P131_is_identified_by, pseudonym))
             elif node.tag == "AUTI":
-                other_name = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/author/other_name']
+                other_name = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/' + str(rep) + '/author/other_name']
                 self.graph.add((other_name, RDF.type, CRM.E82_Actor_Appellation))
                 self.graph.add((other_name, RDFS.label, Literal(node.text)))
                 self.graph.add((other_name, CRM.P131i_identifies, actor))
                 self.graph.add((actor, CRM.P131_is_identified_by, other_name))
             elif node.tag == "AUTB":
-                context = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/author/context']
+                context = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/' + str(rep) + '/author/context']
                 self.graph.add((context, RDF.type, CRM.E62_String))
                 self.graph.add((context, RDFS.label, Literal(node.text)))
                 self.graph.add((actor, CRM.P3a_cultural_context, context))
@@ -493,7 +479,7 @@ class FZeriParserSchedaF:
     #     AUFA: Edizioni Brogi
     #     AUFR: fotografo principale
     #     AUFS: studio
-    def parse_paragraph_photographer(self, paragraph):
+    def parse_paragraph_photographer(self, paragraph, rep):
         production = FZERI_FENTRY[self.entry_id + '/photo/production']
         p_production = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter)]
         self.graph.add((p_production, RDF.type, CRM.E12_Production))
@@ -746,11 +732,11 @@ class FZeriParserSchedaF:
     #     FTAN: \80000\45600\45423.jpg
     #     FTAX: allegata
     # 	  FTAP: fotografia digitale
-    def parse_paragraph_digital_image(self, paragraph):
+    def parse_paragraph_digital_image(self, paragraph, rep):
         image_id = paragraph.find('FTAN')
         if image_id is None:
             return
-        myphoto = FZERI_FENTRY[self.entry_id + '/photo']
+        myphoto = FZERI_FENTRY[self.entry_id + '/photo/' + str(rep)]
         digital_image = FZERI_DIMAGES[image_id.text.replace('\\', '/')]
         self.graph.add((digital_image, RDF.type, CRM.E38_Image))
         self.graph.add((digital_image, CRM.P138_represents, myphoto))
@@ -781,15 +767,15 @@ class FZeriParserSchedaF:
     #     PRDU: 1947/ ca.
     #     PRCD: Università degli studi di Roma "La Sapienza": Dipartimento di Storia dell'Arte
     #     PRVC: Firenze
-    def parse_paragraph_provenance(self, paragraph):
+    def parse_paragraph_provenance(self, paragraph, rep):
         myphoto = FZERI_FENTRY[self.entry_id + '/photo']
-        provenance = FZERI_FENTRY[self.entry_id + '/photo/provenance']
+        provenance = FZERI_FENTRY[self.entry_id + '/photo/provenance' + str(rep)]
         self.graph.add((provenance, RDF.type, CRM.E53_Place))
         self.graph.add((provenance, CRM.P53i_is_former_or_current_location_of, myphoto))
         self.graph.add((myphoto, CRM.P53_has_former_or_current_location, provenance))
-        activity = FZERI_FENTRY[self.entry_id + '/photo/provenance/move']
+        activity = FZERI_FENTRY[self.entry_id + '/photo/provenance/' + str(rep) + '/move']
         self.graph.add((activity, RDF.type, CRM.E9_Move))
-        timespan = FZERI_FENTRY[self.entry_id + '/photo/provenance/move/date']
+        timespan = FZERI_FENTRY[self.entry_id + '/photo/provenance/' + str(rep) + '/move/date']
         self.graph.add((timespan, RDF.type, CRM['E52_Time-Span']))
         self.graph.add((timespan, CRM['P4i_is_time-span_of'], activity))
         self.graph.add((activity, CRM['P4_has_time-span'], timespan))
@@ -799,37 +785,37 @@ class FZeriParserSchedaF:
         country = district = town = repository = collection = None
         for node in paragraph:
             if node.tag == "PRDI":
-                begin = FZERI_FENTRY[self.entry_id + '/photo/provenance/move/date/begin']
+                begin = FZERI_FENTRY[self.entry_id + '/photo/provenance/' + str(rep) + '/move/date/begin']
                 self.graph.add((begin, RDF.type, TIME.Instant))
                 self.graph.add((begin, TIME.inXSDDateTime, Literal(node.text)))
                 self.graph.add((timespan, RDF.type, TIME.TemporalEntity))
                 self.graph.add((timespan, TIME.hasBeginning, begin))
             elif node.tag == "PRDU":
-                end = FZERI_FENTRY[self.entry_id + '/photo/provenance/move/date/end']
+                end = FZERI_FENTRY[self.entry_id + '/photo/provenance/' + str(rep) + '/move/date/end']
                 self.graph.add((end, RDF.type, TIME.Instant))
                 self.graph.add((end, TIME.inXSDDateTime, Literal(node.text)))
                 self.graph.add((timespan, RDF.type, TIME.TemporalEntity))
                 self.graph.add((timespan, TIME.hasEnd, end))
             elif node.tag == "PRVP":
-                district = FZERI_FENTRY[self.entry_id + '/photo/provenance/district']
+                district = FZERI_FENTRY[self.entry_id + '/photo/provenance/' + str(rep) + '/district']
                 self.graph.add((district, RDF.type, CRM.E53_Place))
                 self.graph.add((district, RDFS.label, Literal(node.text)))
             elif node.tag == "PRVS":
-                country = FZERI_FENTRY[self.entry_id + '/photo/provenance/country']
+                country = FZERI_FENTRY[self.entry_id + '/photo/provenance/' + str(rep) + '/country']
                 self.graph.add((country, RDF.type, CRM.E53_Place))
                 self.graph.add((country, RDFS.label, Literal(node.text)))
             elif node.tag == "PRVC" or node.tag == "PRL":
-                town = FZERI_FENTRY[self.entry_id + '/photo/provenance/town']
+                town = FZERI_FENTRY[self.entry_id + '/photo/provenance/' + str(rep) + '/town']
                 self.graph.add((town, RDF.type, CRM.E53_Place))
                 self.graph.add((town, RDFS.label, Literal(node.text)))
             elif node.tag == "PRCM":
-                collection = FZERI_FENTRY[self.entry_id + '/photo/provenance/collection']
+                collection = FZERI_FENTRY[self.entry_id + '/photo/provenance/' + str(rep) + '/collection']
                 self.graph.add((collection, RDF.type, CRM.E46_Section_Definition))
                 self.graph.add((collection, RDFS.label, Literal(node.text)))
                 self.graph.add((collection, CRM.P87i_identifies, provenance))
                 self.graph.add((provenance, CRM.P87_is_identified_by, collection))
             elif node.tag == "PRCD":
-                repository = FZERI_FENTRY[self.entry_id + '/photo/provenance/repository']
+                repository = FZERI_FENTRY[self.entry_id + '/photo/provenance/' + str(rep) + '/repository']
                 self.graph.add((repository, RDF.type, CRM.E53_Place))
                 self.graph.add((repository, RDFS.label, Literal(node.text)))
         contained = provenance
