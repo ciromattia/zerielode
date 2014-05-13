@@ -87,6 +87,7 @@ def init_graph():
     rdf.bind("fzeriThes", "http://fe.fondazionezeri.unibo.it/thesauri/")
 
     # Specialize property CRM.P102_has_title with proper/parallel/attributed flavours
+    # TODO: add properties to FENTRY, not on this ontology
     my_prop = CRM.P102a_has_proper_title
     rdf.add((my_prop, RDF.type, RDF.Property))
     rdf.add((my_prop, RDFS.subPropertyOf, CRM.P102_has_title))

@@ -18,6 +18,9 @@ TIME = Namespace("http://www.w3.org/2006/time")
 FOAF = Namespace("http://xmlns.com/foaf/spec/#")
 FABIO = Namespace("http://purl.org/spar/fabio/")
 FENTRY = Namespace("http://www.essepuntato.it/2014/03/fentry/")
+VCARD = Namespace("http://www.w3.org/TR/vcard-rdf/")
+# TODO: add DATACITE to identificators
+DATACITE = Namespace("http://purl.org/spar/datacite")
 FZERI_FENTRY = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/schedaF/")
 FZERI_OAENTRY = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/schedaOA/")
 FZERI_NEGATIVE = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/negative/")
@@ -52,6 +55,7 @@ class FZeriParserSchedaF:
         title = FZERI_FENTRY[self.entry_id + '/title']
         self.graph.add((title, RDF.type, CRM.E35_Title))
         self.graph.add((title, RDFS.label, Literal(self.xmlentry.attrib['intestazione'])))
+        # TODO: Qui sarebbe carino usare “dcterms:title” in aggiunta.
         self.graph.add((self.myentry, CRM.P102_has_title, title))
         myphoto = FZERI_FENTRY[self.entry_id + '/photo']
         self.graph.add((myphoto, RDF.type, CRM['E22_Man-Made_Object']))
@@ -228,6 +232,10 @@ class FZeriParserSchedaF:
                 self.graph.add((identifier, CRM.P48i_is_preferred_identifier_of, self.myentry))
                 self.graph.add((self.myentry, CRM.P48_has_preferred_identifier, identifier))
             elif node.tag == "ESC":
+                # TODO: Due cose: la prima è che sarebbe carino descrivere quel “keeper” 
+                # TODO: anche come foaf:Agent avente un nome (foaf:name). Ma soprattutto sono terrorizzato da P50i …
+                # TODO: cosa succede se il keeper cambiasse nel tempo? Devo rimuovere quella tripla? Se la risposta è
+                # TODO: sì, bisogna usare PRO (che userei in ogni caso…).
                 actor = FZERI_FENTRY[self.entry_id + '/keeper']
                 self.graph.add((actor, RDF.type, CRM.E40_Legal_Body))
                 self.graph.add((actor, RDFS.label, Literal(node.text)))
@@ -400,6 +408,7 @@ class FZeriParserSchedaF:
         self.graph.add((actor, RDF.type, CRM.E39_Actor))
         self.graph.add((actor, CRM.P14i_performed, production))
         self.graph.add((production, CRM.P14_carried_out_by, actor))
+        # TODO: add PROV-O relations (as specified in TPDL paper)
         for node in paragraph:
             if node.tag == "AUTN":
                 proper_name = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/' + str(rep) + '/author/proper_name']
@@ -512,6 +521,7 @@ class FZeriParserSchedaF:
                 self.graph.add((proper_name, RDFS.label, Literal(node.text)))
                 self.graph.add((actor, CRM.P131_is_identified_by, proper_name))
             elif node.tag == "AUFI":
+                # TODO: add VCard Ontology
                 address = FZERI_FENTRY[self.entry_id + '/photo/production/' +
                                        str(self.production_counter) + '/photographer/address']
                 self.graph.add((address, RDF.type, CRM.E51_Contact_Point))
@@ -594,6 +604,7 @@ class FZeriParserSchedaF:
                 self.graph.add((corporate_name, RDFS.label, Literal(node.text)))
                 self.graph.add((publisher, CRM.P131_is_identified_by, corporate_name))
             elif node.tag == "PDFI":
+                # TODO: add VCard Ontology
                 address = FZERI_FENTRY[self.entry_id + '/photo/production/' +
                                        str(self.production_counter) + '/publisher/address']
                 self.graph.add((address, RDF.type, CRM.E51_Contact_Point))
@@ -895,6 +906,7 @@ class FZeriParserSchedaF:
                 self.graph.add((precise_location, CRM.P87i_identifies, location))
                 self.graph.add((location, CRM.P87_is_identified_by, precise_location))
             elif node.tag == "LDCU":
+                # TODO: add VCard Ontology
                 address = FZERI_FENTRY[self.entry_id + '/photo/location/address']
                 self.graph.add((address, RDF.type, CRM.E53_Place))
                 self.graph.add((address, RDFS.label, Literal(node.text)))
