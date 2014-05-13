@@ -6,28 +6,33 @@ __license__ = 'ISC'
 __copyright__ = '2014, Ciro Mattia Gonano <ciromattia@gmail.com>'
 __docformat__ = 'restructuredtext en'
 
-from rdflib import Namespace, Literal, RDF, RDFS
+from rdflib import Namespace, Literal
+from rdflib.namespace import RDF, RDFS, DCTERMS, FOAF
 from hashlib import sha1
 from urllib import quote_plus
-import fzeri_conversion_maps
 
 # init namespaces
 CRM = Namespace("http://www.cidoc-crm.org/cidoc-crm/")
 PRO = Namespace("http://purl.org/spar/pro")
-DUBLINCORE = Namespace("http://purl.org/dc/terms/title")
 TIME = Namespace("http://www.w3.org/2006/time")
-FOAF = Namespace("http://xmlns.com/foaf/spec/#")
 FABIO = Namespace("http://purl.org/spar/fabio/")
 FENTRY = Namespace("http://www.essepuntato.it/2014/03/fentry/")
 VCARD = Namespace("http://www.w3.org/TR/vcard-rdf/")
 # TODO: add DATACITE to identificators
 DATACITE = Namespace("http://purl.org/spar/datacite")
+QUDT = Namespace("http://qudt.org/vocab/unit#")
 FZERI_FENTRY = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/schedaF/")
 FZERI_OAENTRY = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/schedaOA/")
 FZERI_NEGATIVE = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/negative/")
 FZERI_THESAURI = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/")
 FZERI_DIMAGES = Namespace("http://fe.fondazionezeri.unibo.it/foto/")
 FZERI_COLLECTION = Namespace("http://fe.fondazionezeri.unibo.it/collection/")
+
+unit_fzeri_to_qudt = {
+    'mm': QUDT.Millimeter,
+    'cm': QUDT.Centimeter,
+    'm': QUDT.Meter,
+}
 
 
 class FZeriParserSchedaF:
@@ -55,7 +60,7 @@ class FZeriParserSchedaF:
         self.graph.add((self.myentry, CRM.P1_is_identified_by, Literal(self.entry_id)))
         title = FZERI_FENTRY[self.entry_id + '/title']
         self.graph.add((title, RDF.type, CRM.E35_Title))
-        self.graph.add((title, RDF.type, DUBLINCORE.title))
+        self.graph.add((title, RDF.type, DCTERMS.title))
         self.graph.add((title, RDFS.label, Literal(self.xmlentry.attrib['intestazione'])))
         self.graph.add((self.myentry, CRM.P102_has_title, title))
         myphoto = FZERI_FENTRY[self.entry_id + '/photo']
@@ -345,8 +350,8 @@ class FZeriParserSchedaF:
                 self.graph.add((dimension, CRM.P90_has_value, Literal(node.text)))
                 if paragraph.find("MISU") is not None:
                     self.graph.add((dimension, CRM.P91_has_unit,
-                                    fzeri_conversion_maps.fzeri_to_qudt(paragraph.find("MISU").text)))
-                    self.graph.add((fzeri_conversion_maps.fzeri_to_qudt(paragraph.find("MISU").text),
+                                    unit_fzeri_to_qudt[paragraph.find("MISU").text]))
+                    self.graph.add((unit_fzeri_to_qudt[paragraph.find("MISU").text],
                                     CRM.P91i_is_unit_of, dimension))
                 if paragraph.find("MISO") is not None:
                     self.graph.add((dimension, CRM.P2_has_type,
@@ -370,7 +375,7 @@ class FZeriParserSchedaF:
         depicted_subject = FZERI_FENTRY[self.entry_id + '/photo/subject']
         subj_title = FZERI_FENTRY[self.entry_id + '/photo/subject/title']
         self.graph.add((subj_title, RDF.type, CRM.E35_Title))
-        self.graph.add((title, RDF.type, DUBLINCORE.title))
+        self.graph.add((subj_title, RDF.type, DCTERMS.title))
         self.graph.add((depicted_subject, RDF.type, CRM.E1_CRM_Entity))
         self.graph.add((depicted_subject, CRM.P62i_is_depicted_by, myphoto))
         self.graph.add((myphoto, CRM.P62_depicts, depicted_subject))
@@ -582,7 +587,7 @@ class FZeriParserSchedaF:
     #     PDFD: 1980
     #     EDIT: Tilli - Perugia
     #     PDFR: committente
-    def parse_paragraph_production_and_publishing(self, paragraph):
+    def parse_paragraph_production_and_publishing(self, paragraph, rep):
         production = FZERI_FENTRY[self.entry_id + '/photo/production']
         p_production = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter)]
         self.graph.add((p_production, RDF.type, CRM.E12_Production))

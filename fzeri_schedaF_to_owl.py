@@ -7,11 +7,12 @@ __copyright__ = '2014, Ciro Mattia Gonano <ciromattia@gmail.com>'
 __docformat__ = 'restructuredtext en'
 
 import sys
+import os
 import argparse
 from os.path import dirname, realpath
-from os import mkdir
 import logging
-from rdflib import Graph, RDF, RDFS, XSD, Namespace
+from rdflib import Graph, Namespace
+from rdflib.namespace import RDF, RDFS
 try:
     from lxml import etree
 except ImportError:
@@ -54,7 +55,17 @@ def main():
     if options.single_entry:
         output_dir = dirname(realpath(__file__)) + "/" + options.output_file
         ext = format_to_ext(options.format)
-        mkdir(output_dir)
+        # empty already existing directory or create a new one
+        if os.path.isdir(output_dir):
+            for the_file in os.listdir(output_dir):
+                file_path = os.path.join(output_dir, the_file)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception, e:
+                    print e
+        else:
+            os.path.mkdir(output_dir)
         # parse xml
         for source_file in options.source_file:
             print "### SOURCING FILE " + source_file
