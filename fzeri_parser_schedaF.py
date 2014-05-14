@@ -16,7 +16,7 @@ DCTERMS = Namespace("http://purl.org/dc/terms/")
 FOAF = Namespace("http://xmlns.com/foaf/0.1/")
 CRM = Namespace("http://www.cidoc-crm.org/cidoc-crm/")
 PRO = Namespace("http://purl.org/spar/pro")
-TIME = Namespace("http://www.w3.org/2006/time")
+TIME = Namespace("http://www.w3.org/2006/time#")
 FABIO = Namespace("http://purl.org/spar/fabio/")
 FENTRY = Namespace("http://www.essepuntato.it/2014/03/fentry/")
 FRBR = Namespace("http://purl.org/vocab/frbr/core#")
@@ -27,9 +27,19 @@ QUDT = Namespace("http://qudt.org/vocab/unit#")
 FZERI_FENTRY = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/schedaF/")
 FZERI_OAENTRY = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/schedaOA/")
 FZERI_NEGATIVE = Namespace("http://fe.fondazionezeri.unibo.it/catalogo/negative/")
-FZERI_THESAURI = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/")
 FZERI_DIMAGES = Namespace("http://fe.fondazionezeri.unibo.it/foto/")
 FZERI_COLLECTION = Namespace("http://fe.fondazionezeri.unibo.it/collection/")
+
+FZERI_DIMENSION = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/dimension/")
+FZERI_SERIE = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/serie/")
+FZERI_BOX = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/box/")
+FZERI_MATERIAL = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/material/")
+FZERI_ENTRYTYPE = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/entry_type/")
+FZERI_IDENTIFIER = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/identifier/")
+FZERI_PHOTOFORMAT = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/photo_format/")
+FZERI_PHOTOCOLOR = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/photo_color/")
+FZERI_PHOTOTYPE = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/photo_type/")
+FZERI_CONDITIONTYPE = Namespace("http://fe.fondazionezeri.unibo.it/thesauri/condition_type/")
 
 unit_fzeri_to_qudt = {
     'mm': QUDT.Millimeter,
@@ -162,22 +172,22 @@ class FZeriParserSchedaF:
                 self.graph.add((inv, CRM.P149i_identifies, myphoto))
                 self.graph.add((myphoto, CRM.P149_is_identified_by, inv))
             elif node.tag == "UBFP":
-                collection = FZERI_THESAURI['collection/' + sha1(node.text.encode('utf-8')).hexdigest()]
+                collection = FZERI_COLLECTION[sha1(node.text.encode('utf-8')).hexdigest()]
                 self.graph.add((collection, RDF.type, CRM.E53_Place))
                 self.graph.add((collection, CRM.P87_is_identified_by, Literal(node.text)))
             elif node.tag == "UBFS":
-                serie = FZERI_THESAURI['serie/' + sha1(node.text.encode('utf-8')).hexdigest()]
+                serie = FZERI_SERIE[sha1(node.text.encode('utf-8')).hexdigest()]
                 self.graph.add((serie, RDF.type, CRM.E53_Place))
                 self.graph.add((serie, CRM.P87_is_identified_by, Literal(node.text)))
             elif node.tag == "UBFT":
-                box = FZERI_THESAURI['box/' + sha1(node.text.encode('utf-8')).hexdigest() +
-                                     "/" + paragraph.find("UBFN").text]
+                box = FZERI_BOX[sha1(node.text.encode('utf-8')).hexdigest() +
+                                "/" + paragraph.find("UBFN").text]
                 self.graph.add((box, RDF.type, CRM.E53_Place))
                 self.graph.add((box, CRM.P87_is_identified_by, Literal(node.text)))
                 self.graph.add((box, CRM.P87_is_identified_by, Literal(paragraph.find("UBFN").text)))
             elif node.tag == "UBFU":
-                issue = FZERI_THESAURI['box/' + sha1(node.text.encode('utf-8')).hexdigest() +
-                                       "/" + paragraph.find("UBFF").text]
+                issue = FZERI_BOX[sha1(node.text.encode('utf-8')).hexdigest() +
+                                  "/" + paragraph.find("UBFF").text]
                 self.graph.add((issue, RDF.type, CRM.E53_Place))
                 self.graph.add((issue, CRM.P87_is_identified_by, Literal(node.text)))
                 self.graph.add((issue, CRM.P87_is_identified_by, Literal(paragraph.find("UBFF").text)))
@@ -226,7 +236,7 @@ class FZeriParserSchedaF:
     def parse_paragraph_codes(self, paragraph):
         for node in paragraph:
             if node.tag == "TSK":
-                entry_type = FZERI_THESAURI['entry_type/' + node.text]
+                entry_type = FZERI_ENTRYTYPE[node.text]
                 self.graph.add((entry_type, RDF.type, CRM.E55_Type))
                 self.graph.add((entry_type, RDFS.label, Literal(node.text)))
                 self.graph.add((self.myentry, CRM.P2_has_type, entry_type))
@@ -235,16 +245,16 @@ class FZeriParserSchedaF:
                 identifier = FZERI_FENTRY[self.entry_id + '/id_number']
                 self.graph.add((identifier, RDF.type, CRM.E42_Identifier))
                 self.graph.add((identifier, RDFS.label, Literal(node.text)))
-                self.graph.add((identifier, CRM.P2_has_type, FZERI_THESAURI['identifier/id_number']))
-                self.graph.add((FZERI_THESAURI['identifier/id_number'], CRM.P2i_is_type_of, identifier))
+                self.graph.add((identifier, CRM.P2_has_type, FZERI_IDENTIFIER.id_number))
+                self.graph.add((FZERI_IDENTIFIER.id_number, CRM.P2i_is_type_of, identifier))
                 self.graph.add((self.myentry, CRM.P48_has_preferred_identifier, identifier))
                 self.graph.add((identifier, CRM.P48i_is_preferred_identifier_of, self.myentry))
             elif node.tag == "NCTR":
                 identifier = FZERI_FENTRY[self.entry_id + '/regional_code']
                 self.graph.add((identifier, RDF.type, CRM.E42_Identifier))
                 self.graph.add((identifier, RDFS.label, Literal(node.text)))
-                self.graph.add((identifier, CRM.P2_has_type, FZERI_THESAURI['identifier/regional_code']))
-                self.graph.add((FZERI_THESAURI['identifier/regional_code'], CRM.P2i_is_type_of, identifier))
+                self.graph.add((identifier, CRM.P2_has_type, FZERI_IDENTIFIER.regional_code))
+                self.graph.add((FZERI_IDENTIFIER.regional_code, CRM.P2i_is_type_of, identifier))
                 self.graph.add((identifier, CRM.P48i_is_preferred_identifier_of, self.myentry))
                 self.graph.add((self.myentry, CRM.P48_has_preferred_identifier, identifier))
             elif node.tag == "ESC":
@@ -342,18 +352,18 @@ class FZeriParserSchedaF:
             elif node.tag == "OGTB":
                 self.graph.add((myphoto, DC.type, Literal(node.text)))
             elif node.tag == "OGTS":
-                self.graph.add((myphoto, DC['format'], FZERI_THESAURI['photo_format/' + quote_plus(node.text)]))
+                self.graph.add((myphoto, DC['format'], FZERI_PHOTOFORMAT[quote_plus(node.text)]))
             elif node.tag == "MTX":
-                self.graph.add((myphoto, DC['format'], FZERI_THESAURI['photo_color/' + quote_plus(node.text)]))
+                self.graph.add((myphoto, DC['format'], FZERI_PHOTOCOLOR[quote_plus(node.text)]))
             elif node.tag == "MTC":
-                self.graph.add((myphoto, CRM.P45_consist_of, FZERI_THESAURI['material/' + quote_plus(node.text)]))
-                self.graph.add((FZERI_THESAURI['material/' + quote_plus(node.text)], CRM.P45i_is_incorporated_in,
+                self.graph.add((myphoto, CRM.P45_consist_of, FZERI_MATERIAL[quote_plus(node.text)]))
+                self.graph.add((FZERI_MATERIAL[quote_plus(node.text)], CRM.P45i_is_incorporated_in,
                                 myphoto))
             elif node.tag in dimensions.keys():
                 dimension = FZERI_FENTRY[self.entry_id + '/photo/' + dimensions[node.tag]]
                 self.graph.add((dimension, RDF.type, CRM.E54_Dimension))
-                self.graph.add((dimension, CRM.P2_has_type, FZERI_THESAURI['dimension/' + dimensions[node.tag]]))
-                self.graph.add((FZERI_THESAURI['dimension/' + dimensions[node.tag]], CRM.P2i_is_type_of, dimension))
+                self.graph.add((dimension, CRM.P2_has_type, FZERI_DIMENSION[dimensions[node.tag]]))
+                self.graph.add((FZERI_DIMENSION[dimensions[node.tag]], CRM.P2i_is_type_of, dimension))
                 self.graph.add((dimension, CRM.P90_has_value, Literal(node.text)))
                 if paragraph.find("MISU") is not None:
                     self.graph.add((dimension, CRM.P91_has_unit,
@@ -362,8 +372,8 @@ class FZeriParserSchedaF:
                                     CRM.P91i_is_unit_of, dimension))
                 if paragraph.find("MISO") is not None:
                     self.graph.add((dimension, CRM.P2_has_type,
-                                    FZERI_THESAURI['dimension/' + quote_plus(paragraph.find("MISO").text)]))
-                    self.graph.add((FZERI_THESAURI['dimension/' + quote_plus(paragraph.find("MISO").text)],
+                                    FZERI_DIMENSION[quote_plus(paragraph.find("MISO").text)]))
+                    self.graph.add((FZERI_DIMENSION[quote_plus(paragraph.find("MISO").text)],
                                     CRM.P2i_is_type_of, dimension))
                 self.graph.add((dimension, CRM.P43i_is_dimension_of, myphoto))
                 self.graph.add((myphoto, CRM.P43_has_dimension, dimension))
@@ -797,7 +807,7 @@ class FZeriParserSchedaF:
         self.graph.add((myphoto, FABIO.hasManifestation, digital_image))
         self.graph.add((digital_image, CRM.P138_represents, myphoto))
         self.graph.add((myphoto, CRM.P138i_has_representation, digital_image))
-        img_file = FZERI_DIMAGES[image_id.text.replace('\\', '/')]
+        img_file = FZERI_DIMAGES[image_id.text.replace('\\', '/').strip('/')]
         self.graph.add((img_file, RDF.type, CRM.E38_Image))
         self.graph.add((img_file, RDF.type, FABIO.ComputerFile))
         self.graph.add((img_file, FRBR.exemplar, digital_image))
@@ -808,7 +818,7 @@ class FZeriParserSchedaF:
             if node.tag == "FTAT":
                 self.graph.add((digital_image, CRM.P3_has_note, Literal(node.text)))
             elif node.tag == "FTAP":
-                image_type = FZERI_THESAURI['photo_type/' + quote_plus(node.text)]
+                image_type = FZERI_PHOTOTYPE[quote_plus(node.text)]
                 self.graph.add((image_type, RDF.type, CRM.E55_Type))
                 self.graph.add((image_type, RDFS.label, Literal(node.text)))
                 self.graph.add((image_type, CRM.P2i_is_type_of, digital_image))
@@ -845,7 +855,7 @@ class FZeriParserSchedaF:
         self.graph.add((provenance, CRM.P26i_was_destination_of, activity))
         self.graph.add((activity, CRM.P25_moved, myphoto))
         self.graph.add((myphoto, CRM.P25i_moved_by, activity))
-        country = district = town = repository = collection = None
+        country = district = town = repository = None
         for node in paragraph:
             if node.tag == "PRDI":
                 begin = FZERI_FENTRY[self.entry_id + '/photo/provenance/' + str(rep) + '/move/date/begin']
@@ -962,7 +972,7 @@ class FZeriParserSchedaF:
             if node.tag == "STCS":
                 self.graph.add((condition, RDFS.label, Literal(node.text)))
             elif node.tag == "STCC":
-                condition_type = FZERI_THESAURI['condition_type/' + quote_plus(node.text)]
+                condition_type = FZERI_CONDITIONTYPE[quote_plus(node.text)]
                 self.graph.add((condition_type, RDF.type, CRM.E55_Type))
                 self.graph.add((condition_type, RDFS.label, Literal(node.text)))
                 self.graph.add((condition_type, CRM.P2i_is_type_of, condition))
@@ -977,9 +987,8 @@ class FZeriParserSchedaF:
         collection_desc = paragraph.find('OGTI').text
         if collection_desc is None:
             return
-        collection_id = sha1(collection_desc.encode('utf-8')).hexdigest()
         myphoto = FZERI_FENTRY[self.entry_id + '/photo']
-        collection = FZERI_COLLECTION.collection_id
+        collection = FZERI_COLLECTION[sha1(collection_desc.encode('utf-8')).hexdigest()]
         self.graph.add((collection, RDF.type, CRM.E18_Physical_Thing))
         self.graph.add((collection, CRM.P46_is_composed_of, myphoto))
         self.graph.add((myphoto, CRM.P46i_forms_part_of, collection))
