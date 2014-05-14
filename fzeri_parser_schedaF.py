@@ -6,12 +6,14 @@ __license__ = 'ISC'
 __copyright__ = '2014, Ciro Mattia Gonano <ciromattia@gmail.com>'
 __docformat__ = 'restructuredtext en'
 
-from rdflib import Namespace, Literal
-from rdflib.namespace import RDF, RDFS, DC, DCTERMS, FOAF
+from rdflib import Namespace, Literal, RDF, RDFS
 from hashlib import sha1
 from urllib import quote_plus
 
 # init namespaces
+DC = Namespace("http://purl.org/dc/elements/1.1/")
+DCTERMS = Namespace("http://purl.org/dc/terms/")
+FOAF = Namespace("http://xmlns.com/foaf/0.1/")
 CRM = Namespace("http://www.cidoc-crm.org/cidoc-crm/")
 PRO = Namespace("http://purl.org/spar/pro")
 TIME = Namespace("http://www.w3.org/2006/time")
@@ -55,6 +57,8 @@ class FZeriParserSchedaF:
         except AttributeError:
             self.negative_id = None
 
+        self.init_graph()
+
         # Process all paragraphs
         for child in self.xmlentry.findall("PARAGRAFO"):
             if len(child):   # paragraph does contain at least one subelement
@@ -91,10 +95,6 @@ class FZeriParserSchedaF:
         self.graph.add((production, RDF.type, CRM.E12_Production))
         self.graph.add((production, CRM.P108_produced, myphoto))
         self.graph.add((myphoto, CRM.P108i_was_produced_by, production))
-        
-        am = FZERI_FENTRY[self.entry_id + '/photo/analoguemanifestation']
-        self.graph.add((am, RDF.type, FABIO.AnalogueManifestation))
-        self.graph.add((myphoto, FABIO.hasManifestation, am))
 
     # begin COPYRIGHT paragraph
     # COPYRIGHT contains only one field
@@ -342,12 +342,13 @@ class FZeriParserSchedaF:
             elif node.tag == "OGTB":
                 self.graph.add((myphoto, DC.type, Literal(node.text)))
             elif node.tag == "OGTS":
-                self.graph.add((myphoto, DC.format, FZERI_THESAURI['photo_format/' + quote_plus(node.text)]))
+                self.graph.add((myphoto, DC['format'], FZERI_THESAURI['photo_format/' + quote_plus(node.text)]))
             elif node.tag == "MTX":
-                self.graph.add((myphoto, DC.format, FZERI_THESAURI['photo_color/' + quote_plus(node.text)]))
+                self.graph.add((myphoto, DC['format'], FZERI_THESAURI['photo_color/' + quote_plus(node.text)]))
             elif node.tag == "MTC":
-                self.graph.add((myphoto, CRM.P45_consist_of, FZERI_THESAURI['material/' +
-                                                                            quote_plus(self.dict['MTC'])]))
+                self.graph.add((myphoto, CRM.P45_consist_of, FZERI_THESAURI['material/' + quote_plus(node.text)]))
+                self.graph.add((FZERI_THESAURI['material/' + quote_plus(node.text)], CRM.P45i_is_incorporated_in,
+                                myphoto))
             elif node.tag in dimensions.keys():
                 dimension = FZERI_FENTRY[self.entry_id + '/photo/' + dimensions[node.tag]]
                 self.graph.add((dimension, RDF.type, CRM.E54_Dimension))
