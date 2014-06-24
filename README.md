@@ -28,4 +28,4 @@ optional arguments:
 
 ## COPYRIGHT
 Copyright (c) 2014 Ciro Mattia Gonano  
-Released under ISC LICENSE; see LICENSE.txt for further details.
+Released under MIT LICENSE; see LICENSE.txt for further details.

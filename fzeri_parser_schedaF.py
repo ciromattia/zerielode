@@ -258,10 +258,10 @@ class FZeriParserSchedaF:
                 self.graph.add((identifier, CRM.P48i_is_preferred_identifier_of, self.myentry))
                 self.graph.add((self.myentry, CRM.P48_has_preferred_identifier, identifier))
             elif node.tag == "ESC":
-                # TODO: Due cose: la prima è che sarebbe carino descrivere quel “keeper” 
-                # TODO: anche come foaf:Agent avente un nome (foaf:name). Ma soprattutto sono terrorizzato da P50i …
-                # TODO: cosa succede se il keeper cambiasse nel tempo? Devo rimuovere quella tripla? Se la risposta è
-                # TODO: sì, bisogna usare PRO (che userei in ogni caso…).
+                # TODO: Due cose: la prima è che sarebbe carino descrivere quel "keeper" 
+                # TODO: anche come foaf:Agent avente un nome (foaf:name). Ma soprattutto sono terrorizzato da P50i...
+                # TODO: cosa succede se il keeper cambiasse nel tempo? Devo rimuovere quella tripla? Se si
+                # TODO: bisogna usare PRO (che userei in ogni caso...).
                 actor = FZERI_FENTRY[self.entry_id + '/keeper']
                 self.graph.add((actor, RDF.type, CRM.E40_Legal_Body))
                 self.graph.add((actor, RDFS.label, Literal(node.text)))
