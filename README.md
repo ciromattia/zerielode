@@ -11,19 +11,22 @@ This set of Python scripts aim to convert a FZeri XML catalogue into CIDOC-CRM c
 ## USAGE
 
 ```
-usage: fzeri_schedaF_to_owl.py [-h] [-o OUTPUT_FILE] [-f FORMAT] source_file
+usage: fzeri_schedaF_to_owl.py [-h] [--single-entry] [-o OUTPUT_FILE]
+                               [-f FORMAT]
+                               source_file [source_file ...]
 
 FZeri to CIDOC-CRM catalog conversion script.
 
 positional arguments:
-  source_file           FZeri catalog file path
+  source_file           FZeri catalog file(s) path
 
 optional arguments:
   -h, --help            show this help message and exit
+  --single-entry        Outputs entries in a single file for each one.
   -o OUTPUT_FILE, --output OUTPUT_FILE
-                        Output file name
+                        Output file or directory name
   -f FORMAT, --format FORMAT
-                        Output format
+                        Output format (xml|n3|turtle|nt|pretty-xml|trix)
 ```
 
 ## COPYRIGHT
