@@ -145,6 +145,8 @@ class FZeriParserSchedaF:
         self.graph.add((creation, CRM.P11_had_participant, supervisor))
         self.graph.add((supervisor, CRM.P11i_participated_in, creation))
         # TODO: add PRO relations
+        self.graph.add((creation, CRM.P94_created, self.myentry))
+        self.graph.add((self.myentry, CRM.P94i_was_created_by, creation))
         ### end SUPERVISOR paragraph
 
     # begin CLASSIFICATION paragraph
@@ -168,7 +170,7 @@ class FZeriParserSchedaF:
             elif node.tag == "INVN":
                 inv = FZERI_FENTRY[self.entry_id + '/inventory/' + node.text]
                 self.graph.add((inv, RDF.type, CRM.E42_Identifier))
-                self.graph.add((inv, CRM.P48_has_preferred_identifier, Literal(node.text)))
+                self.graph.add((inv, RDFS.label, Literal(node.text)))
                 self.graph.add((inv, CRM.P149i_identifies, myphoto))
                 self.graph.add((myphoto, CRM.P149_is_identified_by, inv))
             elif node.tag == "UBFP":
@@ -222,7 +224,6 @@ class FZeriParserSchedaF:
                 self.graph.add((acquisition, CRM.P22_transferred_title_to, actor))
             elif node.tag == "CDGG":
                 acquisition = FZERI_FENTRY[self.entry_id + '/photo/ownership']
-                self.graph.add((acquisition, RDF.type, CRM.E8_Acquisition))
                 self.graph.add((acquisition, CRM.P3_has_note, Literal(node.text)))
         ### end OWNERSHIP paragraph
 
@@ -356,7 +357,7 @@ class FZeriParserSchedaF:
             elif node.tag == "MTX":
                 self.graph.add((myphoto, DC['format'], FZERI_PHOTOCOLOR[quote_plus(node.text)]))
             elif node.tag == "MTC":
-                self.graph.add((myphoto, CRM.P45_consist_of, FZERI_MATERIAL[quote_plus(node.text)]))
+                self.graph.add((myphoto, CRM.P45_consists_of, FZERI_MATERIAL[quote_plus(node.text)]))
                 self.graph.add((FZERI_MATERIAL[quote_plus(node.text)], CRM.P45i_is_incorporated_in,
                                 myphoto))
             elif node.tag in dimensions.keys():
@@ -562,9 +563,9 @@ class FZeriParserSchedaF:
                     attribute_assignment = FZERI_FENTRY[self.entry_id + '/photo/production/' +
                                                         str(self.production_counter) + '/photographer/assignment']
                     self.graph.add((attribute_assignment, RDF.type, CRM.E13_Attribute_Assignment))
-                    self.graph.add((attribute_assignment, CRM.P141_attribute_assignmented, actor))
-                    self.graph.add((actor, CRM.P141i_was_attribute_assignmented_by, attribute_assignment))
-                    self.graph.add((attribute_assignment, CRM.P140_attribute_assignmented_attribute_to, p_production))
+                    self.graph.add((attribute_assignment, CRM.P141_assigned, actor))
+                    self.graph.add((actor, CRM.P141i_was_assigned_by, attribute_assignment))
+                    self.graph.add((attribute_assignment, CRM.P140_assigned_attribute_to, p_production))
                     self.graph.add((p_production, CRM.P140i_was_attributed_by, attribute_assignment))
                 self.graph.add((attribute_assignment, CRM.P17_was_motivated_by, Literal(node.text)))
             elif node.tag == "AUFK":
@@ -772,7 +773,7 @@ class FZeriParserSchedaF:
         self.graph.add((p_production, CRM.P16_used_specific_object, negative))
         self.graph.add((negative, CRM.P16i_was_used_for, p_production))
         for node in paragraph:
-            if node.tag == "ROFI":
+            if node.tag == "ROFI":  # the ID we altready mapped in self.negative_id
                 pass
             if node.tag == "ROFC":
                 place = FZERI_NEGATIVE[self.negative_id + '/location']
@@ -781,7 +782,11 @@ class FZeriParserSchedaF:
                 self.graph.add((place, CRM.P55i_is_current_location_of, negative))
                 self.graph.add((negative, CRM.P55_has_current_location, place))
             if node.tag == "ROFO":
-                self.graph.add((negative, CRM.P2_has_type, Literal(node.text)))
+                neg_type = FZERI_PHOTOTYPE[quote_plus(node.text)]
+                self.graph.add((neg_type, RDF.type, CRM.E55_Type))
+                self.graph.add((neg_type, RDFS.label, Literal(node.text)))
+                self.graph.add((neg_type, CRM.P2i_is_type_of, negative))
+                self.graph.add((negative, CRM.P2_has_type, neg_type))
             # TODO: ROFF has yet to be mapped
             if node.tag == "ROFF":
                 pass
@@ -852,6 +857,7 @@ class FZeriParserSchedaF:
         self.graph.add((timespan, RDF.type, CRM['E52_Time-Span']))
         self.graph.add((timespan, CRM['P4i_is_time-span_of'], activity))
         self.graph.add((activity, CRM['P4_has_time-span'], timespan))
+        self.graph.add((provenance, CRM.P26_moved_to, activity))
         self.graph.add((provenance, CRM.P26i_was_destination_of, activity))
         self.graph.add((activity, CRM.P25_moved, myphoto))
         self.graph.add((myphoto, CRM.P25i_moved_by, activity))
