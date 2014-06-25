@@ -478,7 +478,7 @@ class FZeriParserSchedaF:
         p_production = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter)]
         self.graph.add((p_production, RDF.type, CRM.E12_Production))
         self.graph.add((p_production, CRM.P9i_forms_part_of, production))
-        self.graph.add((production, CRM.P9_consist_of, p_production))
+        self.graph.add((production, CRM.P9_consists_of, p_production))
         timespan = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter) + '/date']
         self.graph.add((timespan, RDF.type, CRM['E52_Time-Span']))
         self.graph.add((timespan, CRM['P4i_is_time-span_of'], p_production))
@@ -537,7 +537,7 @@ class FZeriParserSchedaF:
         p_production = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter)]
         self.graph.add((p_production, RDF.type, CRM.E12_Production))
         self.graph.add((p_production, CRM.P9i_forms_part_of, production))
-        self.graph.add((production, CRM.P9_consist_of, p_production))
+        self.graph.add((production, CRM.P9_consists_of, p_production))
         actor = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter) + '/photographer']
         self.graph.add((actor, RDF.type, CRM.E39_Actor))
         self.graph.add((actor, CRM.P14_performed, p_production))
@@ -614,7 +614,7 @@ class FZeriParserSchedaF:
         p_production = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter)]
         self.graph.add((p_production, RDF.type, CRM.E12_Production))
         self.graph.add((p_production, CRM.P9i_forms_part_of, production))
-        self.graph.add((production, CRM.P9_consist_of, p_production))
+        self.graph.add((production, CRM.P9_consists_of, p_production))
         publisher = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter) + '/publisher']
         self.graph.add((publisher, RDF.type, CRM.E39_Actor))
         self.graph.add((publisher, CRM.P14_performed, p_production))
@@ -766,7 +766,7 @@ class FZeriParserSchedaF:
         p_production = FZERI_FENTRY[self.entry_id + '/photo/production/' + str(self.production_counter)]
         self.graph.add((p_production, RDF.type, CRM.E12_Production))
         self.graph.add((p_production, CRM.P9i_forms_part_of, production))
-        self.graph.add((production, CRM.P9_consist_of, p_production))
+        self.graph.add((production, CRM.P9_consists_of, p_production))
         negative = FZERI_NEGATIVE[self.negative_id]
         self.graph.add((negative, RDF.type, CRM['E22_Man-Made_Object']))
         self.graph.add((negative, CRM.P1_is_identified_by, Literal(self.negative_id)))
