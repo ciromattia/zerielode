@@ -264,13 +264,14 @@ class FZeriParserSchedaF:
                 self.graph.add((identifier, CRM.P48i_is_preferred_identifier_of, self.myentry))
                 self.graph.add((self.myentry, CRM.P48_has_preferred_identifier, identifier))
             elif node.tag == "ESC":
-                # TODO: Due cose: la prima è che sarebbe carino descrivere quel "keeper" 
-                # TODO: anche come foaf:Agent avente un nome (foaf:name). Ma soprattutto sono terrorizzato da P50i...
-                # TODO: cosa succede se il keeper cambiasse nel tempo? Devo rimuovere quella tripla? Se si
-                # TODO: bisogna usare PRO (che userei in ogni caso...).
                 actor = FZERI_FENTRY[self.entry_id + '/keeper']
                 self.graph.add((actor, RDF.type, CRM.E40_Legal_Body))
-                self.graph.add((actor, RDFS.label, Literal(node.text)))
+                self.graph.add((actor, RDF.type, FOAF.Agent))
+                self.graph.add((actor, FOAF.name, Literal(node.text)))
+                role = FZERI_FENTRY[self.entry_id + '/keeper/role']
+                self.graph.add((role, RDF.type, PRO.roleInTime))
+                self.graph.add((role, PRO.withRole, Literal("keeper")))
+                self.graph.add((role, PRO.relatesToDocument, self.myentry))
                 self.graph.add((actor, CRM.P50i_is_current_keeper_of, self.myentry))
                 self.graph.add((self.myentry, CRM.P50_has_current_keeper, actor))
             # TODO: LIR has yet to be mapped
