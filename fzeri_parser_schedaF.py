@@ -144,7 +144,12 @@ class FZeriParserSchedaF:
         self.graph.add((creation, RDF.type, CRM.E65_Creation))
         self.graph.add((creation, CRM.P11_had_participant, supervisor))
         self.graph.add((supervisor, CRM.P11i_participated_in, creation))
-        # TODO: add PRO relations
+        self.graph.add((self.myentry, RDF.type, FOAF.Document))
+        role = FZERI_FENTRY[self.entry_id + '/supervisor/role']
+        self.graph.add((role, RDF.type, PRO.roleInTime))
+        self.graph.add((role, PRO.withRole, Literal("supervisor")))
+        self.graph.add((role, PRO.relatesToDocument, self.myentry))
+        self.graph.add((supervisor, PRO.holdsRoleInTime, role))
         self.graph.add((creation, CRM.P94_created, self.myentry))
         self.graph.add((self.myentry, CRM.P94i_was_created_by, creation))
         ### end SUPERVISOR paragraph
