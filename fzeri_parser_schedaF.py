@@ -105,6 +105,9 @@ class FZeriParserSchedaF:
         self.graph.add((production, RDF.type, CRM.E12_Production))
         self.graph.add((production, CRM.P108_produced, myphoto))
         self.graph.add((myphoto, CRM.P108i_was_produced_by, production))
+        artwork = FZERI_OAENTRY[self.oaentry_id + '/artwork']
+        self.graph.add((artwork, RDF.type, CRM.E1_CRM_Entity))
+        self.graph.add((artwork, CRM.P1_is_identified_by, Literal(self.oaentry_id)))
 
     # begin COPYRIGHT paragraph
     # COPYRIGHT contains only one field
@@ -434,10 +437,11 @@ class FZeriParserSchedaF:
     #     AUTI: Palmezzano Marco (?)
     def parse_paragraph_author(self, paragraph, rep):
         # TODO: isn't it already described in the actual artwork?
+        artwork = FZERI_OAENTRY[self.oaentry_id + '/artwork']
         production = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/' + str(rep)]
         self.graph.add((production, RDF.type, CRM.E12_Production))
-        self.graph.add((production, CRM.P108_produced, FZERI_OAENTRY[self.oaentry_id]))
-        self.graph.add((FZERI_OAENTRY[self.oaentry_id], CRM.P108i_was_produced_by, production))
+        self.graph.add((production, CRM.P108_produced, artwork))
+        self.graph.add((artwork, CRM.P108i_was_produced_by, production))
         actor = FZERI_OAENTRY[self.oaentry_id + '/artwork/production/' + str(rep) + '/author']
         self.graph.add((actor, RDF.type, CRM.E39_Actor))
         self.graph.add((actor, CRM.P14i_performed, production))
@@ -529,7 +533,7 @@ class FZeriParserSchedaF:
         self.production_counter += 1
         ### end DATING paragraph
 
-    # begin DATING paragraph
+    # begin PHOTOGRAPHER paragraph
     # example:
     #     AUFI: The Art Institute of Chicago. Photograph Department
     #     AUFK: numero di inventario
